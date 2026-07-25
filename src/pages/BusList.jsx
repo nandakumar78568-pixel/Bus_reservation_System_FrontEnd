@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { searchBuses } from "../api/api";
 
 function BusList() {
@@ -7,13 +7,17 @@ function BusList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    searchBuses()
+    const source = searchParams.get("source");
+    const destination = searchParams.get("destination");
+
+    searchBuses(source && destination ? { source, destination } : undefined)
       .then(setBuses)
       .catch(() => setError("Failed to load buses. Try again."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchParams]);
 
   if (loading) return <div className="text-center py-16 text-gray-600">Loading buses...</div>;
   if (error) return <div className="text-center py-16 text-red-600">{error}</div>;

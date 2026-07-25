@@ -27,7 +27,7 @@ function Navbar() {
           {user?.role === "admin" && <Link to="/admin" className="hover:text-blue-200">Admin</Link>}
           {user ? (
             <>
-              <span className="text-blue-200 text-sm">Hi, {user.full_name}</span>
+              <span className="text-blue-200 text-sm">Hi, {user.fullName}</span>
               <button onClick={handleLogout} className="bg-blue-900 px-3 py-1 rounded-lg hover:bg-blue-950">
                 Logout
               </button>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signupUser } from "../api/api";
 
 function Signup() {
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ function Signup() {
 
         {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</p>}
 
-        <input name="full_name" placeholder="Full Name" value={form.full_name} onChange={handleChange}
+        <input name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange}
           className="w-full border border-gray-300 rounded-lg px-4 py-2" required />
 
         <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange}
