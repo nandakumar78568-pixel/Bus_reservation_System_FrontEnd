@@ -15,7 +15,7 @@ function SeatSelection() {
     getSeats(scheduleId).then((data) => setSeats(data));
   }, [scheduleId]);
 
-  const toggleSeat = async (seat) => {
+ const toggleSeat = async (seat) => {
     if (seat.booked) return;
     setLockError("");
 
@@ -23,10 +23,12 @@ function SeatSelection() {
 
     if (!alreadySelected) {
       try {
-        // Reserve the seat temporarily so another user can't grab it mid-checkout
         await lockSeat(scheduleId, seat.seat_id);
       } catch (err) {
-        setLockError(`Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`);
+        const message = err.status === 400
+          ? `Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`
+          : `Couldn't lock seat ${seat.seat_number}. Please try again.`;
+        setLockError(message);
         return;
       }
     }
@@ -36,7 +38,7 @@ function SeatSelection() {
         ? prev.filter((id) => id !== seat.seat_id)
         : [...prev, seat.seat_id]
     );
-  };
+};
 
   const handleContinue = () => {
     navigate("/booking", { state: { scheduleId, routeId, selected } });

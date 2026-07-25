@@ -55,7 +55,12 @@ export async function lockSeat(scheduleId, seatId) {
     `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
     { method: "POST", headers: authHeaders() }
   );
-  if (!res.ok) throw new Error("Seat is currently locked by another user");
+  if (!res.ok) {
+    const message = await res.text().catch(() => "");
+    const err = new Error(message || "Seat lock failed");
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 
