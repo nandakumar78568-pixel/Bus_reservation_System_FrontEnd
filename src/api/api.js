@@ -134,3 +134,14 @@ export async function deleteBus(busId) {
   if (!res.ok) throw new Error("Failed to delete bus");
   return res.ok;
 }
+
+export async function unlockSeat(scheduleId, seatId) {
+  const res = await fetch(
+    `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
+    { method: "DELETE", headers: authHeaders() }
+  );
+  if (!res.ok) {
+    // Non-fatal — lock will expire on its own in 5 min either way
+    console.warn("Failed to release seat lock");
+  }
+}

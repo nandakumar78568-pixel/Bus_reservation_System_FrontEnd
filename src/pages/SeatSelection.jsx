@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { getSeats, lockSeat } from "../api/api";
+import { getSeats, lockSeat, unlockSeat } from "../api/api";
 
 function SeatSelection() {
   const { scheduleId } = useParams();
@@ -15,8 +15,8 @@ function SeatSelection() {
     getSeats(scheduleId).then((data) => setSeats(data));
   }, [scheduleId]);
 
- const toggleSeat = async (seat) => {
-    if (seat.booked) return;
+  const toggleSeat = async (seat) => {
+    if (seat.booked || (seat.locked && !selected.includes(seat.seat_id))) return;
     setLockError("");
 
     const alreadySelected = selected.includes(seat.seat_id);
@@ -29,8 +29,11 @@ function SeatSelection() {
           ? `Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`
           : `Couldn't lock seat ${seat.seat_number}. Please try again.`;
         setLockError(message);
+        getSeats(scheduleId).then(setSeats); // refresh lock state
         return;
       }
+    } else {
+      unlockSeat(scheduleId, seat.seat_id); // fire and forget
     }
 
     setSelected((prev) =>
@@ -38,7 +41,7 @@ function SeatSelection() {
         ? prev.filter((id) => id !== seat.seat_id)
         : [...prev, seat.seat_id]
     );
-};
+  };
 
   const handleContinue = () => {
     navigate("/booking", { state: { scheduleId, routeId, selected } });
@@ -53,22 +56,29 @@ function SeatSelection() {
       )}
 
       <div className="grid grid-cols-5 gap-3 mb-6">
-        {seats.map((seat) => (
-          <button
-            key={seat.seat_id}
-            onClick={() => toggleSeat(seat)}
-            disabled={seat.booked}
-            className={`py-3 rounded-lg text-sm font-medium border transition
-              ${seat.booked
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : selected.includes(seat.seat_id)
-                ? "bg-blue-700 text-white border-blue-700"
-                : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
-              }`}
-          >
-            {seat.seat_number}
-          </button>
-        ))}
+        {seats.map((seat) => {
+          const isSelected = selected.includes(seat.seat_id);
+          const isUnavailable = seat.booked || (seat.locked && !isSelected);
+          return (
+            <button
+              key={seat.seat_id}
+              onClick={() => toggleSeat(seat)}
+              disabled={isUnavailable}
+              title={seat.locked && !seat.booked && !isSelected ? "Locked by another user" : ""}
+              className={`py-3 rounded-lg text-sm font-medium border transition
+                ${seat.booked
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : seat.locked && !isSelected
+                  ? "bg-yellow-100 text-yellow-700 border-yellow-300 cursor-not-allowed"
+                  : isSelected
+                  ? "bg-blue-700 text-white border-blue-700"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
+                }`}
+            >
+              {seat.seat_number}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex items-center justify-between">
