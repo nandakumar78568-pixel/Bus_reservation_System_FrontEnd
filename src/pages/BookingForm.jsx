@@ -12,8 +12,10 @@ function BookingForm() {
   const [droppingPoints, setDroppingPoints] = useState([]);
   const [boardingPointId, setBoardingPointId] = useState("");
   const [droppingPointId, setDroppingPointId] = useState("");
-  const [pointsLoading, setPointsLoading] = useState(true);   // NEW
-  const [pointsError, setPointsError] = useState("");          // NEW
+  const [journeyDate, setJourneyDate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [pointsError, setPointsError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -44,9 +46,21 @@ function BookingForm() {
     setPassengers(updated);
   };
 
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!journeyDate) {
+      setError("Please select a journey date.");
+      return;
+    }
+    if (!paymentMethod) {
+      setError("Please select a payment method.");
+      return;
+    }
+
     setLoading(true);
     try {
       const booking = await createBooking({
@@ -54,6 +68,8 @@ function BookingForm() {
         passengers,
         boardingPointId,
         droppingPointId,
+        journeyDate,
+        paymentMethod,
       });
       navigate("/booking-confirmation", { state: { booking } });
     } catch (err) {
@@ -113,6 +129,19 @@ function BookingForm() {
           </div>
         </div>
 
+        {/* Journey Date */}
+        <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
+          <h3 className="font-medium text-gray-700">Journey Date</h3>
+          <input
+            type="date"
+            value={journeyDate}
+            min={todayStr}
+            onChange={(e) => setJourneyDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            required
+          />
+        </div>
+
         {/* Passenger Details */}
         {passengers.map((p, index) => (
           <div key={p.seat_id} className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
@@ -149,6 +178,23 @@ function BookingForm() {
             </div>
           </div>
         ))}
+
+        {/* Payment Method */}
+        <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
+          <h3 className="font-medium text-gray-700">Payment Method</h3>
+          <select
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            required
+          >
+            <option value="">Select Payment Method</option>
+            <option value="Paytm">Paytm</option>
+            <option value="DebitCard">Debit Card</option>
+            <option value="CreditCard">Credit Card</option>
+            <option value="NetBanking">Net Banking</option>
+          </select>
+        </div>
 
         <button
           type="submit"

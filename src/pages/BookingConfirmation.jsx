@@ -24,7 +24,9 @@ function BookingConfirmation() {
           <p><strong>Bus:</strong> {booking.bus_number}</p>
           <p><strong>Route:</strong> {booking.source} → {booking.destination}</p>
           <p><strong>Departure:</strong> {booking.departure_time}</p>
+          <p><strong>Journey Date:</strong> {booking.journey_date}</p>
           <p><strong>Seats:</strong> {booking.seat_numbers?.join(", ")}</p>
+          <p><strong>Payment Method:</strong> {booking.payment_method}</p>
           <p><strong>Total Fare:</strong> ₹{booking.total_fare}</p>
         </div>
 
