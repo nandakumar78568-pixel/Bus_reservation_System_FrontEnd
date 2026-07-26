@@ -22,7 +22,7 @@ function BookingForm() {
 
   useEffect(() => {
     if (!routeId) {
-      setPointsError("Route information is missing. Please go back and select the bus again.");
+      setPointsError("Route information is missing. Boarding/dropping point selection will be skipped.");
       setPointsLoading(false);
       return;
     }
@@ -35,7 +35,7 @@ function BookingForm() {
         setPointsError("");
       })
       .catch(() => {
-        setPointsError("Failed to load boarding/dropping points. Please try again.");
+        setPointsError("Failed to load boarding/dropping points. You can still continue without selecting one.");
       })
       .finally(() => setPointsLoading(false));
   }, [routeId]);
@@ -66,8 +66,10 @@ function BookingForm() {
       const booking = await createBooking({
         scheduleId,
         passengers,
-        boardingPointId,
-        droppingPointId,
+        // send null (not "") when nothing is selected, so the backend's
+        // Integer field deserializes correctly instead of failing
+        boardingPointId: boardingPointId ? Number(boardingPointId) : null,
+        droppingPointId: droppingPointId ? Number(droppingPointId) : null,
         journeyDate,
         paymentMethod,
       });
@@ -86,25 +88,28 @@ function BookingForm() {
       {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Boarding & Dropping Point Selection */}
+        {/* Boarding & Dropping Point Selection (optional) */}
         <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
           <h3 className="font-medium text-gray-700">Boarding & Dropping Points</h3>
 
           {pointsLoading && <p className="text-sm text-gray-500">Loading points...</p>}
-          {pointsError && <p className="text-sm text-red-600">{pointsError}</p>}
+          {pointsError && <p className="text-sm text-amber-600">{pointsError}</p>}
           {!pointsLoading && !pointsError && boardingPoints.length === 0 && droppingPoints.length === 0 && (
-            <p className="text-sm text-gray-500">No boarding/dropping points configured for this route yet.</p>
+            <p className="text-sm text-gray-500">
+              No boarding/dropping points configured for this route yet. You can still proceed with your booking.
+            </p>
           )}
 
           <div className="flex gap-3">
             <select
               value={boardingPointId}
               onChange={(e) => setBoardingPointId(e.target.value)}
-              className="w-1/2 border border-gray-300 rounded-lg px-3 py-2"
-              required
+              className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
               disabled={boardingPoints.length === 0}
             >
-              <option value="">Select Boarding Point</option>
+              <option value="">
+                {boardingPoints.length === 0 ? "No boarding points available" : "Select Boarding Point"}
+              </option>
               {boardingPoints.map((p) => (
                 <option key={p.pointId} value={p.pointId}>
                   {p.pointName} ({p.pointTime})
@@ -115,11 +120,12 @@ function BookingForm() {
             <select
               value={droppingPointId}
               onChange={(e) => setDroppingPointId(e.target.value)}
-              className="w-1/2 border border-gray-300 rounded-lg px-3 py-2"
-              required
+              className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
               disabled={droppingPoints.length === 0}
             >
-              <option value="">Select Dropping Point</option>
+              <option value="">
+                {droppingPoints.length === 0 ? "No dropping points available" : "Select Dropping Point"}
+              </option>
               {droppingPoints.map((p) => (
                 <option key={p.pointId} value={p.pointId}>
                   {p.pointName} ({p.pointTime})
