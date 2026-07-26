@@ -50,6 +50,7 @@ export async function getBoardingPoints(routeId) {
 }
 
 // ---------- Seat Locking ----------
+// ---------- Seat Locking ----------
 export async function lockSeat(scheduleId, seatId) {
   const res = await fetch(
     `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
@@ -61,7 +62,9 @@ export async function lockSeat(scheduleId, seatId) {
     err.status = res.status;
     throw err;
   }
-  return res.json();
+  // Backend returns a plain-text confirmation ("Seat locked for 5 minutes"),
+  // not JSON — res.json() would throw a SyntaxError here even on success.
+  return res.text();
 }
 
 // ---------- Bookings ----------
