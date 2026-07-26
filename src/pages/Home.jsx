@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchBuses } from "../api/api";
+import { getCities } from "../api/api";
 
 const busTypeStyles = {
   AC: { gradient: "from-sky-500 to-blue-600", emoji: "🚌" },
@@ -28,6 +29,11 @@ function Home() {
   const [busType, setBusType] = useState("All");
   const [sortBy, setSortBy] = useState("departure");
   const navigate = useNavigate();
+  const [cities, setCities] = useState([]);
+
+useEffect(() => {
+  getCities().then(setCities).catch(() => {});
+}, []);
 
   useEffect(() => {
     searchBuses()
@@ -63,24 +69,31 @@ function Home() {
         >
           <h2 className="text-2xl font-semibold text-gray-800">Search Buses</h2>
 
-          <input
-            type="text"
-            placeholder="From"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+        <input
+  type="text"
+  list="city-options"
+  placeholder="From"
+  value={source}
+  onChange={(e) => setSource(e.target.value)}
+  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  required
+/>
 
-          <input
-            type="text"
-            placeholder="To"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+<input
+  type="text"
+  list="city-options"
+  placeholder="To"
+  value={destination}
+  onChange={(e) => setDestination(e.target.value)}
+  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  required
+/>
 
+<datalist id="city-options">
+  {cities.map((c) => (
+    <option key={c} value={c} />
+  ))}
+</datalist>
           <input
             type="date"
             value={date}

@@ -205,3 +205,8 @@ export async function getAllRoutes() {
   if (!res.ok) throw new Error("Failed to load routes");
   return res.json();
 }
+export async function getCities() {
+  const res = await fetch(`${BASE_URL}/routes/cities`);
+  if (!res.ok) throw new Error("Failed to load cities");
+  return res.json();
+}
