@@ -17,7 +17,12 @@ function SeatSelection() {
   useEffect(() => {
     setLoading(true);
     getSeats(scheduleId)
-      .then((data) => setSeats(data))
+      .then((data) => {
+        setSeats(data);
+        // Restore selection from server-known "locked_by_me" flags, instead
+        // of relying on local state that resets on refresh.
+        setSelected(data.filter((s) => s.locked_by_me).map((s) => s.seat_id));
+      })
       .catch((err) => {
         console.error("getSeats failed:", err);
         setError("Failed to load seats. Please try again.");

@@ -38,7 +38,9 @@ export async function searchBuses(params) {
 }
 
 export async function getSeats(scheduleId) {
-  const res = await fetch(`${BASE_URL}/seats/${scheduleId}`);
+  const res = await fetch(`${BASE_URL}/seats/${scheduleId}`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error("Failed to load seats");
   return res.json();
 }
@@ -49,7 +51,6 @@ export async function getBoardingPoints(routeId) {
   return res.json();
 }
 
-// ---------- Seat Locking ----------
 // ---------- Seat Locking ----------
 export async function lockSeat(scheduleId, seatId) {
   const res = await fetch(
@@ -67,6 +68,17 @@ export async function lockSeat(scheduleId, seatId) {
   return res.text();
 }
 
+export async function unlockSeat(scheduleId, seatId) {
+  const res = await fetch(
+    `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
+    { method: "DELETE", headers: authHeaders() }
+  );
+  if (!res.ok) {
+    // Non-fatal — lock will expire on its own in 5 min either way
+    console.warn("Failed to release seat lock");
+  }
+}
+
 // ---------- Bookings ----------
 export async function createBooking(data) {
   const res = await fetch(`${BASE_URL}/bookings`, {
@@ -74,7 +86,10 @@ export async function createBooking(data) {
     headers: authHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Booking failed");
+  if (!res.ok) {
+    const message = await res.text().catch(() => "");
+    throw new Error(message || "Booking failed");
+  }
   return res.json();
 }
 
@@ -91,7 +106,10 @@ export async function cancelBooking(bookingId) {
     method: "PUT",
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error("Cancellation failed");
+  if (!res.ok) {
+    const message = await res.text().catch(() => "");
+    throw new Error(message || "Cancellation failed");
+  }
   return res.json();
 }
 
@@ -108,7 +126,10 @@ export async function addReview(data) {
     headers: authHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to submit review");
+  if (!res.ok) {
+    const message = await res.text().catch(() => "");
+    throw new Error(message || "Failed to submit review");
+  }
   return res.json();
 }
 
@@ -138,16 +159,6 @@ export async function deleteBus(busId) {
   return res.ok;
 }
 
-export async function unlockSeat(scheduleId, seatId) {
-  const res = await fetch(
-    `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
-    { method: "DELETE", headers: authHeaders() }
-  );
-  if (!res.ok) {
-    // Non-fatal — lock will expire on its own in 5 min either way
-    console.warn("Failed to release seat lock");
-  }
-}
 // ---------- Admin: Boarding Points ----------
 export async function getPointsByRoute(routeId) {
   const res = await fetch(`${BASE_URL}/admin/boarding-points/route/${routeId}`, {
@@ -175,6 +186,7 @@ export async function deleteBoardingPoint(pointId) {
   if (!res.ok) throw new Error("Failed to delete point");
   return res.ok;
 }
+
 export async function getAllRoutes() {
   const res = await fetch(`${BASE_URL}/admin/routes`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to load routes");

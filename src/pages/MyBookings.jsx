@@ -7,6 +7,7 @@ function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelError, setCancelError] = useState("");
 
   useEffect(() => {
     getMyBookings(user.userId)
@@ -17,10 +18,15 @@ function MyBookings() {
 
   const handleCancel = async (bookingId) => {
     if (!confirm("Cancel this booking?")) return;
-    await cancelBooking(bookingId);
-    setBookings((prev) =>
-      prev.map((b) => (b.bookingId === bookingId ? { ...b, status: "Cancelled" } : b))
-    );
+    setCancelError("");
+    try {
+      await cancelBooking(bookingId);
+      setBookings((prev) =>
+        prev.map((b) => (b.bookingId === bookingId ? { ...b, status: "Cancelled" } : b))
+      );
+    } catch (err) {
+      setCancelError("Failed to cancel booking. Please try again.");
+    }
   };
 
   if (loading) return <div className="text-center py-10">Loading bookings...</div>;
@@ -30,6 +36,10 @@ function MyBookings() {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-4">
       <h2 className="text-2xl font-semibold mb-4">My Bookings</h2>
+
+      {cancelError && (
+        <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{cancelError}</p>
+      )}
 
       {bookings.map((b) => (
         <div key={b.bookingId} className="bg-white shadow rounded-lg p-5 border border-gray-200 flex justify-between items-center">
