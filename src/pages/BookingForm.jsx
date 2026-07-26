@@ -12,16 +12,30 @@ function BookingForm() {
   const [droppingPoints, setDroppingPoints] = useState([]);
   const [boardingPointId, setBoardingPointId] = useState("");
   const [droppingPointId, setDroppingPointId] = useState("");
+  const [pointsLoading, setPointsLoading] = useState(true);   // NEW
+  const [pointsError, setPointsError] = useState("");          // NEW
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!routeId) return;
-    getBoardingPoints(routeId).then((data) => {
-      setBoardingPoints(data.filter((p) => p.pointType === "Boarding"));
-      setDroppingPoints(data.filter((p) => p.pointType === "Dropping"));
-    });
+    if (!routeId) {
+      setPointsError("Route information is missing. Please go back and select the bus again.");
+      setPointsLoading(false);
+      return;
+    }
+
+    setPointsLoading(true);
+    getBoardingPoints(routeId)
+      .then((data) => {
+        setBoardingPoints(data.filter((p) => p.pointType === "Boarding"));
+        setDroppingPoints(data.filter((p) => p.pointType === "Dropping"));
+        setPointsError("");
+      })
+      .catch(() => {
+        setPointsError("Failed to load boarding/dropping points. Please try again.");
+      })
+      .finally(() => setPointsLoading(false));
   }, [routeId]);
 
   const handleChange = (index, field, value) => {
@@ -60,12 +74,19 @@ function BookingForm() {
         <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
           <h3 className="font-medium text-gray-700">Boarding & Dropping Points</h3>
 
+          {pointsLoading && <p className="text-sm text-gray-500">Loading points...</p>}
+          {pointsError && <p className="text-sm text-red-600">{pointsError}</p>}
+          {!pointsLoading && !pointsError && boardingPoints.length === 0 && droppingPoints.length === 0 && (
+            <p className="text-sm text-gray-500">No boarding/dropping points configured for this route yet.</p>
+          )}
+
           <div className="flex gap-3">
             <select
               value={boardingPointId}
               onChange={(e) => setBoardingPointId(e.target.value)}
               className="w-1/2 border border-gray-300 rounded-lg px-3 py-2"
               required
+              disabled={boardingPoints.length === 0}
             >
               <option value="">Select Boarding Point</option>
               {boardingPoints.map((p) => (
@@ -80,6 +101,7 @@ function BookingForm() {
               onChange={(e) => setDroppingPointId(e.target.value)}
               className="w-1/2 border border-gray-300 rounded-lg px-3 py-2"
               required
+              disabled={droppingPoints.length === 0}
             >
               <option value="">Select Dropping Point</option>
               {droppingPoints.map((p) => (
