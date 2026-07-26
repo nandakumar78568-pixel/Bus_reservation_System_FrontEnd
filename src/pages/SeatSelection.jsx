@@ -6,13 +6,23 @@ function SeatSelection() {
   const { scheduleId } = useParams();
   const { state } = useLocation();
   const routeId = state?.routeId;
+
   const [seats, setSeats] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState([]);
   const [lockError, setLockError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    getSeats(scheduleId).then((data) => setSeats(data));
+    setLoading(true);
+    getSeats(scheduleId)
+      .then((data) => setSeats(data))
+      .catch((err) => {
+        console.error("getSeats failed:", err);
+        setError("Failed to load seats. Please try again.");
+      })
+      .finally(() => setLoading(false));
   }, [scheduleId]);
 
   const toggleSeat = async (seat) => {
@@ -29,11 +39,11 @@ function SeatSelection() {
           ? `Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`
           : `Couldn't lock seat ${seat.seat_number}. Please try again.`;
         setLockError(message);
-        getSeats(scheduleId).then(setSeats); // refresh lock state
+        getSeats(scheduleId).then(setSeats);
         return;
       }
     } else {
-      unlockSeat(scheduleId, seat.seat_id); // fire and forget
+      unlockSeat(scheduleId, seat.seat_id);
     }
 
     setSelected((prev) =>
@@ -47,50 +57,131 @@ function SeatSelection() {
     navigate("/booking", { state: { scheduleId, routeId, selected } });
   };
 
-  return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h2 className="text-2xl font-semibold mb-6">Select Your Seats</h2>
+  // Group flat seat list into rows of 4 for a 2 + aisle + 2 bus layout
+  const rows = [];
+  for (let i = 0; i < seats.length; i += 4) {
+    rows.push(seats.slice(i, i + 4));
+  }
 
+  const seatClass = (seat, isSelected) => {
+    if (seat.booked) return "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed";
+    if (seat.locked && !isSelected) return "bg-yellow-100 text-yellow-700 border-yellow-300 cursor-not-allowed";
+    if (isSelected) return "bg-green-600 text-white border-green-600";
+    return "bg-white text-gray-700 border-gray-300 hover:border-blue-500";
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto py-8 px-4 pb-28">
+      <h2 className="text-2xl font-semibold mb-1">Select Your Seats</h2>
+      <p className="text-sm text-gray-500 mb-6">Tap a seat to select</p>
+
+      {loading && <p className="text-gray-500 mb-4">Loading seats...</p>}
+      {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{error}</p>}
+      {!loading && !error && seats.length === 0 && (
+        <p className="text-gray-500 mb-4">No seats found for this bus. Contact admin.</p>
+      )}
       {lockError && (
         <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{lockError}</p>
       )}
 
-      <div className="grid grid-cols-5 gap-3 mb-6">
-        {seats.map((seat) => {
-          const isSelected = selected.includes(seat.seat_id);
-          const isUnavailable = seat.booked || (seat.locked && !isSelected);
-          return (
-            <button
-              key={seat.seat_id}
-              onClick={() => toggleSeat(seat)}
-              disabled={isUnavailable}
-              title={seat.locked && !seat.booked && !isSelected ? "Locked by another user" : ""}
-              className={`py-3 rounded-lg text-sm font-medium border transition
-                ${seat.booked
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : seat.locked && !isSelected
-                  ? "bg-yellow-100 text-yellow-700 border-yellow-300 cursor-not-allowed"
-                  : isSelected
-                  ? "bg-blue-700 text-white border-blue-700"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
-                }`}
-            >
-              {seat.seat_number}
-            </button>
-          );
-        })}
-      </div>
+      {seats.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+          {/* Legend */}
+          <div className="flex flex-wrap gap-4 justify-center mb-6 text-xs text-gray-600">
+            <LegendItem colorClass="bg-white border-gray-300" label="Available" />
+            <LegendItem colorClass="bg-green-600 border-green-600" label="Selected" />
+            <LegendItem colorClass="bg-yellow-100 border-yellow-300" label="Locked" />
+            <LegendItem colorClass="bg-gray-300 border-gray-300" label="Booked" />
+          </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-gray-600">{selected.length} seat(s) selected</p>
-        <button
-          onClick={handleContinue}
-          disabled={selected.length === 0}
-          className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
-        >
-          Continue
-        </button>
-      </div>
+          {/* Steering wheel indicator */}
+          <div className="flex justify-end pr-2 mb-3">
+            <div className="w-8 h-8 rounded-full border-4 border-gray-300 flex items-center justify-center text-gray-400 text-xs">
+              🚌
+            </div>
+          </div>
+
+          {/* Bus body */}
+          <div className="border-2 border-gray-200 rounded-2xl px-4 py-6 bg-gray-50">
+            <div className="flex flex-col gap-3 items-center">
+              {rows.map((row, rowIndex) => (
+                <div key={rowIndex} className="flex items-center gap-3">
+                  {/* Left pair */}
+                  <div className="flex gap-2">
+                    {row.slice(0, 2).map((seat) => {
+                      const isSelected = selected.includes(seat.seat_id);
+                      return (
+                        <button
+                          key={seat.seat_id}
+                          onClick={() => toggleSeat(seat)}
+                          disabled={seat.booked || (seat.locked && !isSelected)}
+                          title={seat.locked && !seat.booked && !isSelected ? "Locked by another user" : ""}
+                          className={`w-12 h-12 rounded-lg text-xs font-semibold border transition ${seatClass(seat, isSelected)}`}
+                        >
+                          {seat.seat_number}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Aisle gap */}
+                  <div className="w-8" />
+
+                  {/* Right pair */}
+                  <div className="flex gap-2">
+                    {row.slice(2, 4).map((seat) => {
+                      const isSelected = selected.includes(seat.seat_id);
+                      return (
+                        <button
+                          key={seat.seat_id}
+                          onClick={() => toggleSeat(seat)}
+                          disabled={seat.booked || (seat.locked && !isSelected)}
+                          title={seat.locked && !seat.booked && !isSelected ? "Locked by another user" : ""}
+                          className={`w-12 h-12 rounded-lg text-xs font-semibold border transition ${seatClass(seat, isSelected)}`}
+                        >
+                          {seat.seat_number}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky bottom summary bar */}
+      {seats.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+          <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Seats selected</p>
+              <p className="font-semibold text-gray-800">
+                {selected.length > 0
+                  ? seats.filter((s) => selected.includes(s.seat_id)).map((s) => s.seat_number).join(", ")
+                  : "None"}
+              </p>
+            </div>
+            <button
+              onClick={handleContinue}
+              disabled={selected.length === 0}
+              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+            >
+              Continue ({selected.length})
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LegendItem({ colorClass, label }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`w-4 h-4 rounded border ${colorClass}`} />
+      <span>{label}</span>
     </div>
   );
 }
