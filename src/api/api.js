@@ -41,7 +41,20 @@ export async function getSeats(scheduleId) {
   const res = await fetch(`${BASE_URL}/seats/${scheduleId}`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error("Failed to load seats");
+  if (!res.ok) {
+    // Surface the backend's actual message (e.g. "Schedule not found")
+    // instead of a generic string, so failures are debuggable.
+    let message = "Failed to load seats";
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error;
+    } catch {
+      // response wasn't JSON — keep the generic message
+    }
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 

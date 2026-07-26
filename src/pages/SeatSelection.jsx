@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { getSeats, lockSeat, unlockSeat } from "../api/api";
 
 function SeatSelection() {
@@ -25,7 +25,11 @@ function SeatSelection() {
       })
       .catch((err) => {
         console.error("getSeats failed:", err);
-        setError("Failed to load seats. Please try again.");
+        setError(
+          err.status === 404
+            ? "This bus schedule no longer exists. Please search again."
+            : err.message || "Failed to load seats. Please try again."
+        );
       })
       .finally(() => setLoading(false));
   }, [scheduleId]);
@@ -44,7 +48,7 @@ function SeatSelection() {
           ? `Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`
           : `Couldn't lock seat ${seat.seat_number}. Please try again.`;
         setLockError(message);
-        getSeats(scheduleId).then(setSeats);
+        getSeats(scheduleId).then(setSeats).catch(() => {});
         return;
       }
     } else {
@@ -81,7 +85,16 @@ function SeatSelection() {
       <p className="text-sm text-gray-500 mb-6">Tap a seat to select</p>
 
       {loading && <p className="text-gray-500 mb-4">Loading seats...</p>}
-      {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{error}</p>}
+
+      {error && (
+        <div className="text-red-600 text-sm bg-red-50 p-3 rounded mb-4">
+          <p className="mb-2">{error}</p>
+          <Link to="/" className="text-blue-700 hover:underline font-medium">
+            ← Back to bus search
+          </Link>
+        </div>
+      )}
+
       {!loading && !error && seats.length === 0 && (
         <p className="text-gray-500 mb-4">No seats found for this bus. Contact admin.</p>
       )}

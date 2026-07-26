@@ -2,6 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { searchBuses } from "../api/api";
 
+const busTypeStyles = {
+  AC: { gradient: "from-sky-500 to-blue-600", emoji: "🚌" },
+  Non_AC: { gradient: "from-amber-500 to-orange-600", emoji: "🚍" },
+  Sleeper: { gradient: "from-purple-500 to-indigo-600", emoji: "🛌" },
+  Semi_Sleeper: { gradient: "from-teal-500 to-emerald-600", emoji: "🚐" },
+};
+
+function BusBanner({ busType }) {
+  const style = busTypeStyles[busType] || busTypeStyles.AC;
+  return (
+    <div className={`h-28 rounded-t-lg bg-gradient-to-r ${style.gradient} flex items-center justify-center text-5xl select-none`}>
+      {style.emoji}
+    </div>
+  );
+}
+
 function BusList() {
   const [buses, setBuses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,32 +46,36 @@ function BusList() {
       {buses.map((bus) => (
         <div
           key={bus.scheduleId}
-          className="bg-white shadow rounded-lg p-5 flex justify-between items-center border border-gray-200"
+          className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden"
         >
-          <div>
-            <h3 className="font-bold text-lg">
-              {bus.bus?.busNumber} - {bus.bus?.busType}
-            </h3>
-            <p className="text-gray-600 text-sm">
-              {bus.route?.source} → {bus.route?.destination}
-            </p>
-            <p className="text-gray-500 text-sm">
-              Departure: {bus.departureTime}
-            </p>
-          </div>
+          <BusBanner busType={bus.bus?.busType} />
 
-          <div className="text-right">
-            <p className="text-blue-700 font-bold text-lg">₹{bus.fare}</p>
-            <button
-              onClick={() =>
-                navigate(`/seats/${bus.scheduleId}`, {
-                  state: { routeId: bus.route?.routeId },
-                })
-              }
-              className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition"
-            >
-              Select Seats
-            </button>
+          <div className="flex justify-between items-center p-5">
+            <div>
+              <h3 className="font-bold text-lg">
+                {bus.bus?.busNumber} - {bus.bus?.busType}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {bus.route?.source} → {bus.route?.destination}
+              </p>
+              <p className="text-gray-500 text-sm">
+                Departure: {bus.departureTime}
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-blue-700 font-bold text-lg">₹{bus.fare}</p>
+              <button
+                onClick={() =>
+                  navigate(`/seats/${bus.scheduleId}`, {
+                    state: { routeId: bus.route?.routeId },
+                  })
+                }
+                className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition"
+              >
+                Select Seats
+              </button>
+            </div>
           </div>
         </div>
       ))}

@@ -14,6 +14,8 @@ function BookingForm() {
   const [droppingPointId, setDroppingPointId] = useState("");
   const [journeyDate, setJourneyDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
   const [pointsLoading, setPointsLoading] = useState(true);
   const [pointsError, setPointsError] = useState("");
   const [error, setError] = useState("");
@@ -48,6 +50,14 @@ function BookingForm() {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
+  const isUpiFlow = paymentMethod === "UPI" || paymentMethod === "Paytm";
+  const isCardFlow = paymentMethod === "DebitCard" || paymentMethod === "CreditCard";
+
+  const formatCardInput = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 19);
+    return digits.replace(/(.{4})/g, "$1 ").trim();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -60,22 +70,39 @@ function BookingForm() {
       setError("Please select a payment method.");
       return;
     }
+    if (isUpiFlow) {
+      if (!upiId.trim()) {
+        setError("Please enter your UPI ID.");
+        return;
+      }
+      if (!/^[\w.-]{2,}@[a-zA-Z]{2,}$/.test(upiId.trim())) {
+        setError("Please enter a valid UPI ID (e.g. name@bank).");
+        return;
+      }
+    }
+    if (isCardFlow) {
+      const digits = cardNumber.replace(/\s/g, "");
+      if (digits.length < 12 || digits.length > 19 || !/^\d+$/.test(digits)) {
+        setError("Please enter a valid card number.");
+        return;
+      }
+    }
 
     setLoading(true);
     try {
       const booking = await createBooking({
         scheduleId,
         passengers,
-        // send null (not "") when nothing is selected, so the backend's
-        // Integer field deserializes correctly instead of failing
         boardingPointId: boardingPointId ? Number(boardingPointId) : null,
         droppingPointId: droppingPointId ? Number(droppingPointId) : null,
         journeyDate,
         paymentMethod,
+        upiId: isUpiFlow ? upiId.trim() : null,
+        cardNumber: isCardFlow ? cardNumber.replace(/\s/g, "") : null,
       });
       navigate("/booking-confirmation", { state: { booking } });
     } catch (err) {
-      setError("Booking failed. One or more seats may already be taken.");
+      setError(err.message || "Booking failed. One or more seats may already be taken.");
     } finally {
       setLoading(false);
     }
@@ -88,7 +115,7 @@ function BookingForm() {
       {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Boarding & Dropping Point Selection (optional) */}
+        {/* Boarding & Dropping Point Selection */}
         <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
           <h3 className="font-medium text-gray-700">Boarding & Dropping Points</h3>
 
@@ -190,16 +217,45 @@ function BookingForm() {
           <h3 className="font-medium text-gray-700">Payment Method</h3>
           <select
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
+            onChange={(e) => {
+              setPaymentMethod(e.target.value);
+              setUpiId("");
+              setCardNumber("");
+            }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2"
             required
           >
             <option value="">Select Payment Method</option>
+            <option value="UPI">UPI</option>
             <option value="Paytm">Paytm</option>
             <option value="DebitCard">Debit Card</option>
             <option value="CreditCard">Credit Card</option>
             <option value="NetBanking">Net Banking</option>
           </select>
+
+          {isUpiFlow && (
+            <input
+              type="text"
+              placeholder="Enter UPI ID (e.g. name@okbank)"
+              value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              required
+            />
+          )}
+
+          {isCardFlow && (
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Card Number"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(formatCardInput(e.target.value))}
+              maxLength={23}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              required
+            />
+          )}
         </div>
 
         <button
