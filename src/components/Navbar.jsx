@@ -25,6 +25,7 @@ function Navbar() {
           <Link to="/" className="hover:text-blue-200">Home</Link>
           {user && <Link to="/my-bookings" className="hover:text-blue-200">My Bookings</Link>}
           {user?.role === "admin" && <Link to="/admin" className="hover:text-blue-200">Admin</Link>}
+          {user?.role === "admin" && <Link to="/admin/points" className="hover:text-blue-200">Boarding Points</Link>}
           {user ? (
             <>
               <span className="text-blue-200 text-sm">Hi, {user.fullName}</span>

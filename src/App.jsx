@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import Navbar from "./components/Navbar";
+import AdminBoardingPoints from "./pages/AdminBoardingPoints";
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           <Route path="/seats/:scheduleId" element={<SeatSelection />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/admin/points" element={
+  <ProtectedRoute adminOnly><AdminBoardingPoints /></ProtectedRoute>
+} />
 
           <Route path="/booking" element={
             <ProtectedRoute><BookingForm /></ProtectedRoute>

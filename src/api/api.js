@@ -148,3 +148,35 @@ export async function unlockSeat(scheduleId, seatId) {
     console.warn("Failed to release seat lock");
   }
 }
+// ---------- Admin: Boarding Points ----------
+export async function getPointsByRoute(routeId) {
+  const res = await fetch(`${BASE_URL}/admin/boarding-points/route/${routeId}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to load points");
+  return res.json();
+}
+
+export async function addBoardingPoint(data) {
+  const res = await fetch(`${BASE_URL}/admin/boarding-points`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to add point");
+  return res.json();
+}
+
+export async function deleteBoardingPoint(pointId) {
+  const res = await fetch(`${BASE_URL}/admin/boarding-points/${pointId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete point");
+  return res.ok;
+}
+export async function getAllRoutes() {
+  const res = await fetch(`${BASE_URL}/admin/routes`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to load routes");
+  return res.json();
+}
