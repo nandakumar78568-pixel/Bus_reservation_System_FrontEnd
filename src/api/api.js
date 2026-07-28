@@ -8,6 +8,34 @@ function authHeaders() {
   };
 }
 
+// Call this after any authenticated fetch to handle expired/invalid tokens
+// consistently. Throws with the real backend message when available.
+async function handleAuthFailure(res, fallbackMessage) {
+  let message = fallbackMessage;
+  try {
+    const body = await res.json();
+    if (body?.error) message = body.error;
+  } catch {
+    try {
+      const text = await res.text();
+      if (text) message = text;
+    } catch {
+      // no body
+    }
+  }
+
+  if (res.status === 401) {
+    // Token is dead — clear it and force the app back to login.
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.dispatchEvent(new CustomEvent("auth-expired", { detail: message }));
+  }
+
+  const err = new Error(message);
+  err.status = res.status;
+  throw err;
+}
+
 // ---------- Auth ----------
 export async function loginUser(data) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
