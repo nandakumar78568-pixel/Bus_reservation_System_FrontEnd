@@ -1,18 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { searchBuses } from "../api/api";
-import { getCities } from "../api/api";
+import { searchBuses, getCities } from "../api/api";
 import BusBanner from "../components/BusBanner";
-
-
-function BusBanner({ busType }) {
-  const style = busTypeStyles[busType] || busTypeStyles.AC;
-  return (
-    <div className={`h-28 rounded-t-lg bg-gradient-to-r ${style.gradient} flex items-center justify-center text-5xl select-none`}>
-      {style.emoji}
-    </div>
-  );
-}
 
 function Home() {
   const [source, setSource] = useState("");
@@ -26,9 +15,9 @@ function Home() {
   const navigate = useNavigate();
   const [cities, setCities] = useState([]);
 
-useEffect(() => {
-  getCities().then(setCities).catch(() => {});
-}, []);
+  useEffect(() => {
+    getCities().then(setCities).catch(() => {});
+  }, []);
 
   useEffect(() => {
     searchBuses()
@@ -64,31 +53,32 @@ useEffect(() => {
         >
           <h2 className="text-2xl font-semibold text-gray-800">Search Buses</h2>
 
-        <input
-  type="text"
-  list="city-options"
-  placeholder="From"
-  value={source}
-  onChange={(e) => setSource(e.target.value)}
-  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  required
-/>
+          <input
+            type="text"
+            list="city-options"
+            placeholder="From"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
 
-<input
-  type="text"
-  list="city-options"
-  placeholder="To"
-  value={destination}
-  onChange={(e) => setDestination(e.target.value)}
-  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  required
-/>
+          <input
+            type="text"
+            list="city-options"
+            placeholder="To"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
 
-<datalist id="city-options">
-  {cities.map((c) => (
-    <option key={c} value={c} />
-  ))}
-</datalist>
+          <datalist id="city-options">
+            {cities.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+
           <input
             type="date"
             value={date}
