@@ -13,6 +13,15 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const onAuthExpired = () => {
+      setUser(null);
+      window.location.href = "/login";
+    };
+    window.addEventListener("auth-expired", onAuthExpired);
+    return () => window.removeEventListener("auth-expired", onAuthExpired);
+  }, []);
+
   const login = (userData, token) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
