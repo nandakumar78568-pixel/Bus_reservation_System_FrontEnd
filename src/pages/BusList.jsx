@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { searchBuses } from "../api/api";
+import BusBanner from "../components/BusBanner";
 
 const busTypeStyles = {
   AC: { gradient: "from-sky-500 to-blue-600", emoji: "🚌" },

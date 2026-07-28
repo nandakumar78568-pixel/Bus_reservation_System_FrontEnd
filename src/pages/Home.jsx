@@ -2,13 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchBuses } from "../api/api";
 import { getCities } from "../api/api";
+import BusBanner from "../components/BusBanner";
 
-const busTypeStyles = {
-  AC: { gradient: "from-sky-500 to-blue-600", emoji: "🚌" },
-  Non_AC: { gradient: "from-amber-500 to-orange-600", emoji: "🚍" },
-  Sleeper: { gradient: "from-purple-500 to-indigo-600", emoji: "🛌" },
-  Semi_Sleeper: { gradient: "from-teal-500 to-emerald-600", emoji: "🚐" },
-};
 
 function BusBanner({ busType }) {
   const style = busTypeStyles[busType] || busTypeStyles.AC;
