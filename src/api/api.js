@@ -36,6 +36,22 @@ async function handleAuthFailure(res, fallbackMessage) {
   throw err;
 }
 
+// Shared wrapper for every authenticated call: attaches the JWT header and
+// routes any non-2xx response through handleAuthFailure. This is the piece
+// that was missing from several functions below — without it, a dead token
+// just throws a generic error instead of logging the user out, so the UI
+// keeps looking "logged in" while every request silently 401s.
+async function authFetch(url, options = {}, fallbackMessage = "Request failed") {
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...authHeaders(), ...(options.headers || {}) },
+  });
+  if (!res.ok) {
+    await handleAuthFailure(res, fallbackMessage);
+  }
+  return res;
+}
+
 // ---------- Auth ----------
 export async function loginUser(data) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
@@ -66,12 +82,13 @@ export async function searchBuses(params) {
 }
 
 export async function getSeats(scheduleId) {
+  // /api/seats/** is permitAll, so this doesn't strictly need auth — but we
+  // still send the token when we have one, so the backend can flag
+  // "locked_by_me" for the current user.
   const res = await fetch(`${BASE_URL}/seats/${scheduleId}`, {
     headers: authHeaders(),
   });
   if (!res.ok) {
-    // Surface the backend's actual message (e.g. "Schedule not found")
-    // instead of a generic string, so failures are debuggable.
     let message = "Failed to load seats";
     try {
       const body = await res.json();
@@ -94,16 +111,11 @@ export async function getBoardingPoints(routeId) {
 
 // ---------- Seat Locking ----------
 export async function lockSeat(scheduleId, seatId) {
-  const res = await fetch(
+  const res = await authFetch(
     `${BASE_URL}/seat-locks?scheduleId=${scheduleId}&seatId=${seatId}`,
-    { method: "POST", headers: authHeaders() }
+    { method: "POST" },
+    "Seat lock failed"
   );
-  if (!res.ok) {
-    const message = await res.text().catch(() => "");
-    const err = new Error(message || "Seat lock failed");
-    err.status = res.status;
-    throw err;
-  }
   // Backend returns a plain-text confirmation ("Seat locked for 5 minutes"),
   // not JSON — res.json() would throw a SyntaxError here even on success.
   return res.text();
@@ -122,35 +134,29 @@ export async function unlockSeat(scheduleId, seatId) {
 
 // ---------- Bookings ----------
 export async function createBooking(data) {
-  const res = await fetch(`${BASE_URL}/bookings`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const message = await res.text().catch(() => "");
-    throw new Error(message || "Booking failed");
-  }
+  const res = await authFetch(
+    `${BASE_URL}/bookings`,
+    { method: "POST", body: JSON.stringify(data) },
+    "Booking failed"
+  );
   return res.json();
 }
 
 export async function getMyBookings(userId) {
-  const res = await fetch(`${BASE_URL}/bookings/user/${userId}`, {
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to load bookings");
+  const res = await authFetch(
+    `${BASE_URL}/bookings/user/${userId}`,
+    {},
+    "Failed to load bookings"
+  );
   return res.json();
 }
 
 export async function cancelBooking(bookingId) {
-  const res = await fetch(`${BASE_URL}/bookings/${bookingId}/cancel`, {
-    method: "PUT",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const message = await res.text().catch(() => "");
-    throw new Error(message || "Cancellation failed");
-  }
+  const res = await authFetch(
+    `${BASE_URL}/bookings/${bookingId}/cancel`,
+    { method: "PUT" },
+    "Cancellation failed"
+  );
   return res.json();
 }
 
@@ -162,77 +168,71 @@ export async function getReviews(busId) {
 }
 
 export async function addReview(data) {
-  const res = await fetch(`${BASE_URL}/reviews`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const message = await res.text().catch(() => "");
-    throw new Error(message || "Failed to submit review");
-  }
+  const res = await authFetch(
+    `${BASE_URL}/reviews`,
+    { method: "POST", body: JSON.stringify(data) },
+    "Failed to submit review"
+  );
   return res.json();
 }
 
 // ---------- Admin ----------
 export async function getAllBuses() {
-  const res = await fetch(`${BASE_URL}/admin/buses`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to load buses");
+  const res = await authFetch(`${BASE_URL}/admin/buses`, {}, "Failed to load buses");
   return res.json();
 }
 
 export async function addBus(data) {
-  const res = await fetch(`${BASE_URL}/admin/buses`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to add bus");
+  const res = await authFetch(
+    `${BASE_URL}/admin/buses`,
+    { method: "POST", body: JSON.stringify(data) },
+    "Failed to add bus"
+  );
   return res.json();
 }
 
 export async function deleteBus(busId) {
-  const res = await fetch(`${BASE_URL}/admin/buses/${busId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to delete bus");
+  const res = await authFetch(
+    `${BASE_URL}/admin/buses/${busId}`,
+    { method: "DELETE" },
+    "Failed to delete bus"
+  );
   return res.ok;
 }
 
 // ---------- Admin: Boarding Points ----------
 export async function getPointsByRoute(routeId) {
-  const res = await fetch(`${BASE_URL}/admin/boarding-points/route/${routeId}`, {
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to load points");
+  const res = await authFetch(
+    `${BASE_URL}/admin/boarding-points/route/${routeId}`,
+    {},
+    "Failed to load points"
+  );
   return res.json();
 }
 
 export async function addBoardingPoint(data) {
-  const res = await fetch(`${BASE_URL}/admin/boarding-points`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to add point");
+  const res = await authFetch(
+    `${BASE_URL}/admin/boarding-points`,
+    { method: "POST", body: JSON.stringify(data) },
+    "Failed to add point"
+  );
   return res.json();
 }
 
 export async function deleteBoardingPoint(pointId) {
-  const res = await fetch(`${BASE_URL}/admin/boarding-points/${pointId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to delete point");
+  const res = await authFetch(
+    `${BASE_URL}/admin/boarding-points/${pointId}`,
+    { method: "DELETE" },
+    "Failed to delete point"
+  );
   return res.ok;
 }
 
 export async function getAllRoutes() {
-  const res = await fetch(`${BASE_URL}/admin/routes`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to load routes");
+  const res = await authFetch(`${BASE_URL}/admin/routes`, {}, "Failed to load routes");
   return res.json();
 }
+
 export async function getCities() {
   const res = await fetch(`${BASE_URL}/routes/cities`);
   if (!res.ok) throw new Error("Failed to load cities");
