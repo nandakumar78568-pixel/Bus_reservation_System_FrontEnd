@@ -19,8 +19,6 @@ function SeatSelection() {
     getSeats(scheduleId)
       .then((data) => {
         setSeats(data);
-        // Restore selection from server-known "locked_by_me" flags, instead
-        // of relying on local state that resets on refresh.
         setSelected(data.filter((s) => s.locked_by_me).map((s) => s.seat_id));
       })
       .catch((err) => {
@@ -44,6 +42,13 @@ function SeatSelection() {
       try {
         await lockSeat(scheduleId, seat.seat_id);
       } catch (err) {
+        // 401 means the token was dead — api.js already cleared it and is
+        // about to redirect to /login via the auth-expired listener, so
+        // just show a message; no need to also refetch seats here.
+        if (err.status === 401) {
+          setLockError("Your session has expired. Please log in again.");
+          return;
+        }
         const message = err.status === 400
           ? `Seat ${seat.seat_number} is currently locked by another user. Try a different seat.`
           : `Couldn't lock seat ${seat.seat_number}. Please try again.`;
@@ -66,7 +71,6 @@ function SeatSelection() {
     navigate("/booking", { state: { scheduleId, routeId, selected } });
   };
 
-  // Group flat seat list into rows of 4 for a 2 + aisle + 2 bus layout
   const rows = [];
   for (let i = 0; i < seats.length; i += 4) {
     rows.push(seats.slice(i, i + 4));
@@ -104,7 +108,6 @@ function SeatSelection() {
 
       {seats.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-          {/* Legend */}
           <div className="flex flex-wrap gap-4 justify-center mb-6 text-xs text-gray-600">
             <LegendItem colorClass="bg-white border-gray-300" label="Available" />
             <LegendItem colorClass="bg-green-600 border-green-600" label="Selected" />
@@ -112,19 +115,16 @@ function SeatSelection() {
             <LegendItem colorClass="bg-gray-300 border-gray-300" label="Booked" />
           </div>
 
-          {/* Steering wheel indicator */}
           <div className="flex justify-end pr-2 mb-3">
             <div className="w-8 h-8 rounded-full border-4 border-gray-300 flex items-center justify-center text-gray-400 text-xs">
               🚌
             </div>
           </div>
 
-          {/* Bus body */}
           <div className="border-2 border-gray-200 rounded-2xl px-4 py-6 bg-gray-50">
             <div className="flex flex-col gap-3 items-center">
               {rows.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex items-center gap-3">
-                  {/* Left pair */}
                   <div className="flex gap-2">
                     {row.slice(0, 2).map((seat) => {
                       const isSelected = selected.includes(seat.seat_id);
@@ -142,10 +142,8 @@ function SeatSelection() {
                     })}
                   </div>
 
-                  {/* Aisle gap */}
                   <div className="w-8" />
 
-                  {/* Right pair */}
                   <div className="flex gap-2">
                     {row.slice(2, 4).map((seat) => {
                       const isSelected = selected.includes(seat.seat_id);
@@ -169,7 +167,6 @@ function SeatSelection() {
         </div>
       )}
 
-      {/* Sticky bottom summary bar */}
       {seats.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
