@@ -31,26 +31,26 @@ function Signup() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh] bg-gray-50">
+    <div className="flex justify-center items-center min-h-[80vh] bg-[#FFF8F3]">
       <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 w-full max-w-sm space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-800">Create Account</h2>
+        <h2 className="font-display text-2xl font-bold text-gray-800">Create Account</h2>
 
         {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</p>}
 
         <input name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2" required />
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]" required />
 
         <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2" required />
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]" required />
 
         <input name="phone" placeholder="Phone" value={form.phone} onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2" required />
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]" required />
 
         <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2" required />
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]" required />
 
         <button type="submit" disabled={loading}
-          className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50">
+          className="w-full bg-[#D6262C] text-white py-2 rounded-lg font-semibold hover:bg-[#B3201F] transition disabled:opacity-50">
           {loading ? "Creating account..." : "Sign Up"}
         </button>
       </form>

@@ -33,9 +33,9 @@ function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh] bg-gray-50">
+    <div className="flex justify-center items-center min-h-[80vh] bg-[#FFF8F3]">
       <form onSubmit={handleLogin} className="bg-white shadow-lg rounded-xl p-8 w-full max-w-sm space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-800">Login</h2>
+        <h2 className="font-display text-2xl font-bold text-gray-800">Login</h2>
 
         {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</p>}
 
@@ -44,7 +44,7 @@ function Login() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]"
           required
         />
 
@@ -53,20 +53,20 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#D6262C]"
           required
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+          className="w-full bg-[#D6262C] text-white py-2 rounded-lg font-semibold hover:bg-[#B3201F] transition disabled:opacity-50"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-sm text-center text-gray-600">
-          No account? <a href="/signup" className="text-blue-700 hover:underline">Sign up</a>
+          No account? <a href="/signup" className="text-[#D6262C] hover:underline font-medium">Sign up</a>
         </p>
       </form>
     </div>

@@ -42,9 +42,6 @@ function SeatSelection() {
       try {
         await lockSeat(scheduleId, seat.seat_id);
       } catch (err) {
-        // 401 means the token was dead — api.js already cleared it and is
-        // about to redirect to /login via the auth-expired listener, so
-        // just show a message; no need to also refetch seats here.
         if (err.status === 401) {
           setLockError("Your session has expired. Please log in again.");
           return;
@@ -80,12 +77,12 @@ function SeatSelection() {
     if (seat.booked) return "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed";
     if (seat.locked && !isSelected) return "bg-yellow-100 text-yellow-700 border-yellow-300 cursor-not-allowed";
     if (isSelected) return "bg-green-600 text-white border-green-600";
-    return "bg-white text-gray-700 border-gray-300 hover:border-blue-500";
+    return "bg-white text-gray-700 border-gray-300 hover:border-[#D6262C]";
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 pb-28">
-      <h2 className="text-2xl font-semibold mb-1">Select Your Seats</h2>
+    <div className="max-w-3xl mx-auto py-8 px-4 pb-28 bg-[#FFF8F3] min-h-[80vh]">
+      <h2 className="font-display text-2xl font-bold text-gray-800 mb-1">Select Your Seats</h2>
       <p className="text-sm text-gray-500 mb-6">Tap a seat to select</p>
 
       {loading && <p className="text-gray-500 mb-4">Loading seats...</p>}
@@ -93,7 +90,7 @@ function SeatSelection() {
       {error && (
         <div className="text-red-600 text-sm bg-red-50 p-3 rounded mb-4">
           <p className="mb-2">{error}</p>
-          <Link to="/" className="text-blue-700 hover:underline font-medium">
+          <Link to="/" className="text-[#D6262C] hover:underline font-medium">
             ← Back to bus search
           </Link>
         </div>
@@ -181,7 +178,7 @@ function SeatSelection() {
             <button
               onClick={handleContinue}
               disabled={selected.length === 0}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+              className="bg-[#D6262C] text-white px-6 py-2 rounded-lg hover:bg-[#B3201F] transition disabled:opacity-50"
             >
               Continue ({selected.length})
             </button>

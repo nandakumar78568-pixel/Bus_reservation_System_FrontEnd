@@ -25,8 +25,8 @@ function BusList() {
   if (buses.length === 0) return <div className="text-center py-16 text-gray-600">No buses found for this route.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-4">
-      <h2 className="text-2xl font-semibold mb-4">Available Buses</h2>
+    <div className="max-w-3xl mx-auto py-8 px-4 space-y-4 bg-[#FFF8F3] min-h-[80vh]">
+      <h2 className="font-display text-2xl font-bold text-gray-800 pt-4">Available Buses</h2>
 
       {buses.map((bus) => (
         <div
@@ -37,7 +37,7 @@ function BusList() {
 
           <div className="flex justify-between items-center p-5">
             <div>
-              <h3 className="font-bold text-lg">
+              <h3 className="font-bold text-lg text-gray-800">
                 {bus.bus?.busNumber} - {bus.bus?.busType}
               </h3>
               <p className="text-gray-600 text-sm">
@@ -49,14 +49,14 @@ function BusList() {
             </div>
 
             <div className="text-right">
-              <p className="text-blue-700 font-bold text-lg">₹{bus.fare}</p>
+              <p className="text-[#D6262C] font-bold text-lg">₹{bus.fare}</p>
               <button
                 onClick={() =>
                   navigate(`/seats/${bus.scheduleId}`, {
                     state: { routeId: bus.route?.routeId },
                   })
                 }
-                className="mt-2 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition"
+                className="mt-2 bg-[#D6262C] text-white px-4 py-2 rounded-lg hover:bg-[#B3201F] transition"
               >
                 Select Seats
               </button>
