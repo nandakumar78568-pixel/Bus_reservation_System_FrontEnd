@@ -238,3 +238,18 @@ export async function getCities() {
   if (!res.ok) throw new Error("Failed to load cities");
   return res.json();
 }
+export async function getScheduleById(scheduleId) {
+  const res = await fetch(`${BASE_URL}/buses/schedule/${scheduleId}`);
+  if (!res.ok) throw new Error("Failed to load fare details");
+  return res.json();
+}
+
+export async function applyCoupon(code, fare) {
+  const res = await fetch(`${BASE_URL}/coupons/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, fare }),
+  });
+  if (!res.ok) throw new Error("Failed to check coupon");
+  return res.json();
+}

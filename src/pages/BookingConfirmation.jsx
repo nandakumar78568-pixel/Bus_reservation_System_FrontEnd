@@ -13,6 +13,8 @@ function BookingConfirmation() {
     );
   }
 
+  const hasDiscount = booking.coupon_code && booking.discount_amount > 0;
+
   return (
     <div className="max-w-md mx-auto py-12 px-4 text-center bg-[#FFF8F3] min-h-[80vh]">
       <div className="bg-green-50 border border-green-200 rounded-xl p-8">
@@ -27,7 +29,15 @@ function BookingConfirmation() {
           <p><strong>Journey Date:</strong> {booking.journey_date}</p>
           <p><strong>Seats:</strong> {booking.seat_numbers?.join(", ")}</p>
           <p><strong>Payment Method:</strong> {booking.payment_method}</p>
-          <p><strong>Total Fare:</strong> ₹{booking.total_fare}</p>
+          {hasDiscount && (
+            <>
+              <p><strong>Subtotal:</strong> ₹{booking.subtotal}</p>
+              <p className="text-green-600">
+                <strong>Coupon:</strong> {booking.coupon_code} (-₹{booking.discount_amount})
+              </p>
+            </>
+          )}
+          <p className="text-base"><strong>Total Fare:</strong> ₹{booking.total_fare}</p>
         </div>
 
         <Link to="/my-bookings" className="block mt-6 bg-[#D6262C] text-white py-2 rounded-lg hover:bg-[#B3201F] transition">

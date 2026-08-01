@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { createBooking, getBoardingPoints } from "../api/api";
+import { createBooking, getBoardingPoints, getScheduleById, applyCoupon } from "../api/api";
 
 function BookingForm() {
   const { state } = useLocation();
@@ -21,6 +21,29 @@ function BookingForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // ---- Fare (needed to show a subtotal and to validate coupons) ----
+  const [fare, setFare] = useState(null);
+  const [fareLoading, setFareLoading] = useState(true);
+  const [fareError, setFareError] = useState("");
+
+  // ---- Coupon ----
+  const [couponCode, setCouponCode] = useState("");
+  const [couponResult, setCouponResult] = useState(null); // { valid, code, discountAmount, finalFare, message }
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  useEffect(() => {
+    if (!scheduleId) {
+      setFareError("Schedule information is missing.");
+      setFareLoading(false);
+      return;
+    }
+    setFareLoading(true);
+    getScheduleById(scheduleId)
+      .then((data) => setFare(data.fare))
+      .catch(() => setFareError("Couldn't load fare details. You can still complete your booking."))
+      .finally(() => setFareLoading(false));
+  }, [scheduleId]);
 
   useEffect(() => {
     if (!routeId) {
@@ -46,6 +69,21 @@ function BookingForm() {
     const updated = [...passengers];
     updated[index][field] = value;
     setPassengers(updated);
+  };
+
+  const subtotal = fare != null ? fare * passengers.length : null;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim() || subtotal == null) return;
+    setCouponLoading(true);
+    try {
+      const result = await applyCoupon(couponCode.trim().toUpperCase(), subtotal);
+      setCouponResult(result);
+    } catch (err) {
+      setCouponResult({ valid: false, message: err.message || "Failed to apply coupon" });
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
@@ -99,6 +137,7 @@ function BookingForm() {
         paymentMethod,
         upiId: isUpiFlow ? upiId.trim() : null,
         cardNumber: isCardFlow ? cardNumber.replace(/\s/g, "") : null,
+        couponCode: couponResult?.valid ? couponResult.code : null,
       });
       navigate("/booking-confirmation", { state: { booking } });
     } catch (err) {
@@ -211,6 +250,63 @@ function BookingForm() {
             </div>
           </div>
         ))}
+
+        {/* Fare Summary & Coupon */}
+        <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
+          <h3 className="font-medium text-gray-700">Fare & Coupon</h3>
+
+          {fareLoading && <p className="text-sm text-gray-500">Loading fare...</p>}
+          {fareError && <p className="text-sm text-amber-600">{fareError}</p>}
+
+          {!fareLoading && subtotal != null && (
+            <>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="Enter coupon code (e.g. GOFIRST)"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponResult(null);
+                  }}
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={!couponCode.trim() || couponLoading}
+                  className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition disabled:opacity-50"
+                >
+                  {couponLoading ? "Checking..." : "Apply"}
+                </button>
+              </div>
+
+              {couponResult && !couponResult.valid && (
+                <p className="text-sm text-red-600">{couponResult.message}</p>
+              )}
+              {couponResult && couponResult.valid && (
+                <p className="text-sm text-green-600">{couponResult.message}</p>
+              )}
+
+              <div className="text-sm text-gray-600 space-y-1 pt-2 border-t border-dashed border-gray-200">
+                <div className="flex justify-between">
+                  <span>Subtotal ({passengers.length} seat{passengers.length > 1 ? "s" : ""})</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
+                {couponResult?.valid && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({couponResult.code})</span>
+                    <span>-₹{couponResult.discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold text-gray-800 text-base pt-1">
+                  <span>Total</span>
+                  <span>₹{(couponResult?.valid ? couponResult.finalFare : subtotal).toFixed(2)}</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Payment Method */}
         <div className="bg-white shadow rounded-lg p-4 border border-gray-200 space-y-3">
