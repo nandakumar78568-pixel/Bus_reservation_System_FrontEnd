@@ -353,14 +353,17 @@ function BookingForm() {
             />
           )}
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-        >
-          {loading ? "Confirming..." : "Confirm Booking"}
-        </button>
+<button
+  type="submit"
+  disabled={loading || fareLoading}
+  className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+>
+  {loading
+    ? "Confirming..."
+    : subtotal != null
+      ? `Confirm Booking — Pay ₹${(couponResult?.valid ? couponResult.finalFare : subtotal).toFixed(2)}`
+      : "Confirm Booking"}
+</button>
       </form>
     </div>
   );
