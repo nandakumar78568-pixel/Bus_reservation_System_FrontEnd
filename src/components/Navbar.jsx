@@ -10,40 +10,53 @@ function BusLogoIcon() {
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* rounded badge background */}
-      <rect x="1" y="1" width="46" height="46" rx="12" fill="#FFFFFF" />
-      <rect x="1" y="1" width="46" height="46" rx="12" fill="#FFF3E0" opacity="0.0" />
+      <rect x="1" y="1" width="46" height="46" rx="14" fill="#FFFFFF" />
+
+      {/* motion arc — suggests "Go" / forward movement, wraps behind the bus */}
+      <path
+        d="M6 30 A18 18 0 0 1 24 8"
+        fill="none"
+        stroke="#FFC107"
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+      <path
+        d="M4 24 A20 20 0 0 1 24 4"
+        fill="none"
+        stroke="#D6262C"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.35"
+      />
 
       {/* bus body */}
-      <rect x="7" y="15" width="34" height="19" rx="5" fill="#FFC107" />
+      <rect x="8" y="17" width="33" height="18" rx="5" fill="#FFC107" />
 
       {/* roof highlight */}
-      <path d="M9 19 Q9 15 13 15 H35 Q39 15 39 19 V21 H9 Z" fill="#FFD54F" />
+      <path d="M10 21 Q10 17 14 17 H35 Q39 17 39 21 V23 H10 Z" fill="#FFD54F" />
 
       {/* windshield / front window (front = right) */}
-      <rect x="31" y="18" width="7" height="9" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
+      <rect x="31" y="20" width="7" height="8.5" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
 
       {/* passenger windows */}
-      <rect x="11" y="18" width="6" height="9" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
-      <rect x="19" y="18" width="6" height="9" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
+      <rect x="12" y="20" width="6" height="8.5" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
+      <rect x="20" y="20" width="6" height="8.5" rx="2" fill="#BBDEFB" stroke="#0D47A1" strokeWidth="1" />
 
       {/* red stripe */}
-      <rect x="7" y="28" width="34" height="4" fill="#D6262C" />
+      <rect x="8" y="30" width="33" height="4" fill="#D6262C" />
 
       {/* door */}
-      <rect x="26" y="28" width="4" height="6" fill="#37474F" opacity="0.5" />
+      <rect x="27" y="30" width="4" height="6" fill="#37474F" opacity="0.5" />
 
       {/* headlight */}
-      <circle cx="39.5" cy="30" r="1.6" fill="#FFF176" />
+      <circle cx="39.5" cy="32" r="1.6" fill="#FFF176" />
 
       {/* wheels */}
-      <circle cx="15" cy="35" r="4" fill="#212121" />
-      <circle cx="15" cy="35" r="1.6" fill="#B0BEC5" />
-      <circle cx="33" cy="35" r="4" fill="#212121" />
-      <circle cx="33" cy="35" r="1.6" fill="#B0BEC5" />
-
-      {/* road/motion lines */}
-      <line x1="2" y1="24" x2="6" y2="24" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
-      <line x1="2" y1="28" x2="5" y2="28" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      <circle cx="16" cy="37" r="4" fill="#212121" />
+      <circle cx="16" cy="37" r="1.6" fill="#B0BEC5" />
+      <circle cx="33" cy="37" r="4" fill="#212121" />
+      <circle cx="33" cy="37" r="1.6" fill="#B0BEC5" />
     </svg>
   );
 }
