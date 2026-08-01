@@ -8,7 +8,7 @@ function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancelError, setCancelError] = useState("");
-  const [refundInfo, setRefundInfo] = useState(null); // { amount }
+  const [refundInfo, setRefundInfo] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
@@ -57,8 +57,8 @@ function MyBookings() {
   if (bookings.length === 0) return <div className="text-center py-10 text-gray-600">No bookings yet.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-4">
-      <h2 className="text-2xl font-semibold mb-4">My Bookings</h2>
+    <div className="max-w-3xl mx-auto py-8 px-4 space-y-4 bg-[#FFF8F3] min-h-[80vh]">
+      <h2 className="font-display text-2xl font-bold text-gray-800 mb-4">My Bookings</h2>
 
       {cancelError && (
         <p className="text-red-600 text-sm bg-red-50 p-2 rounded">{cancelError}</p>
@@ -86,7 +86,6 @@ function MyBookings() {
         </div>
       ))}
 
-      {/* Animated refund confirmation modal */}
       {refundInfo && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
@@ -115,7 +114,7 @@ function MyBookings() {
             </p>
             <button
               onClick={closeRefundModal}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition"
+              className="bg-[#D6262C] text-white px-6 py-2 rounded-lg hover:bg-[#B3201F] transition"
             >
               Got it
             </button>
