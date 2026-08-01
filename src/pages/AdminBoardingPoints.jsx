@@ -25,7 +25,7 @@ function AdminBoardingPoints() {
         route: { routeId: Number(routeId) },
         pointName: form.pointName,
         pointType: form.pointType,
-        pointTime: form.pointTime, // "HH:mm:ss" or "HH:mm"
+        pointTime: form.pointTime,
       });
       setPoints([...points, newPoint]);
       setForm({ pointName: "", pointType: "Boarding", pointTime: "" });
@@ -41,8 +41,8 @@ function AdminBoardingPoints() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h2 className="text-2xl font-semibold mb-6">Manage Boarding & Dropping Points</h2>
+    <div className="max-w-2xl mx-auto py-8 px-4 bg-[#FFF8F3] min-h-[80vh]">
+      <h2 className="font-display text-2xl font-bold text-gray-800 mb-6">Manage Boarding & Dropping Points</h2>
 
       {error && <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{error}</p>}
 
@@ -84,7 +84,7 @@ function AdminBoardingPoints() {
               className="border border-gray-300 rounded-lg px-3 py-2"
               required
             />
-            <button type="submit" className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+            <button type="submit" className="bg-[#D6262C] text-white px-4 py-2 rounded-lg hover:bg-[#B3201F] transition">
               Add Point
             </button>
           </form>
