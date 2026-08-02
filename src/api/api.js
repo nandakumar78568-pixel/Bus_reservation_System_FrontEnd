@@ -253,3 +253,11 @@ export async function applyCoupon(code, fare) {
   if (!res.ok) throw new Error("Failed to check coupon");
   return res.json();
 }
+export async function addBusWithSchedule(data) {
+  const res = await authFetch(
+    `${BASE_URL}/admin/buses/full`,
+    { method: "POST", body: JSON.stringify(data) },
+    "Failed to add bus"
+  );
+  return res.json();
+}
