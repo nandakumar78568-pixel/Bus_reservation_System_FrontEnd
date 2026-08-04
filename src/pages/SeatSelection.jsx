@@ -1,6 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { getSeats, lockSeat, unlockSeat } from "../api/api";
+import { getSeats, lockSeat, unlockSeat, getScheduleById } from "../api/api";
+
+function SeatPersonIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <circle cx="12" cy="7" r="3.2" />
+      <path d="M12 12c-4.2 0-7.5 2.3-7.5 5.2V19h15v-1.8c0-2.9-3.3-5.2-7.5-5.2z" />
+    </svg>
+  );
+}
+
+function SteeringIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+      <path d="M12 5.5v3M12 15.5v3M6 9l3 2M18 9l-3 2M6 15l3-2M18 15l-3-2" />
+    </svg>
+  );
+}
 
 function SeatSelection() {
   const { scheduleId } = useParams();
@@ -12,6 +31,8 @@ function SeatSelection() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState([]);
   const [lockError, setLockError] = useState("");
+  const [busType, setBusType] = useState(null);
+  const [fare, setFare] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +51,17 @@ function SeatSelection() {
         );
       })
       .finally(() => setLoading(false));
+  }, [scheduleId]);
+
+  useEffect(() => {
+    getScheduleById(scheduleId)
+      .then((data) => {
+        setBusType(data.bus?.busType || null);
+        setFare(data.fare ?? null);
+      })
+      .catch(() => {
+        // Non-fatal — falls back to the standard seater layout if we can't tell.
+      });
   }, [scheduleId]);
 
   const toggleSeat = async (seat) => {
@@ -68,6 +100,9 @@ function SeatSelection() {
     navigate("/booking", { state: { scheduleId, routeId, selected } });
   };
 
+  const isSleeper = busType === "Sleeper" || busType === "Semi_Sleeper";
+
+  // ---------- Seater (AC / Non_AC) helpers ----------
   const rows = [];
   for (let i = 0; i < seats.length; i += 4) {
     rows.push(seats.slice(i, i + 4));
@@ -79,6 +114,54 @@ function SeatSelection() {
     if (isSelected) return "bg-green-600 text-white border-green-600";
     return "bg-white text-gray-700 border-gray-300 hover:border-[#D6262C]";
   };
+
+  // ---------- Sleeper / Semi-Sleeper helpers ----------
+  const berthClass = (seat, isSelected) => {
+    if (seat.booked) return "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed";
+    if (seat.locked && !isSelected) return "bg-yellow-50 text-yellow-700 border-yellow-300 cursor-not-allowed";
+    if (isSelected) return "bg-[#D6262C]/10 text-[#D6262C] border-[#D6262C]";
+    return "bg-white text-gray-600 border-gray-200 hover:border-[#D6262C]";
+  };
+
+  const half = Math.ceil(seats.length / 2);
+  const lowerDeck = seats.slice(0, half);
+  const upperDeck = seats.slice(half);
+
+  const SleeperBerth = ({ seat }) => {
+    const isSelected = selected.includes(seat.seat_id);
+    return (
+      <button
+        onClick={() => toggleSeat(seat)}
+        disabled={seat.booked || (seat.locked && !isSelected)}
+        title={seat.locked && !seat.booked && !isSelected ? "Locked by another user" : ""}
+        className={`flex flex-col items-center justify-center gap-1 h-20 w-16 rounded-xl border-2 text-[10px] font-semibold transition ${berthClass(seat, isSelected)}`}
+      >
+        <SeatPersonIcon className="w-5 h-5" />
+        <span>{seat.booked ? "Sold" : seat.seat_number}</span>
+        {!seat.booked && fare != null && (
+          <span className="text-[9px] font-normal opacity-70">₹{fare}</span>
+        )}
+      </button>
+    );
+  };
+
+  const SleeperDeck = ({ title, deckSeats, showWheel }) => (
+    <div className="flex-1">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold text-gray-700 text-sm">{title}</h4>
+        {showWheel && (
+          <div className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-400">
+            <SteeringIcon className="w-4 h-4" />
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-3 justify-items-center">
+        {deckSeats.map((seat) => (
+          <SleeperBerth key={seat.seat_id} seat={seat} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 pb-28 bg-[#FFF8F3] min-h-[80vh]">
@@ -103,7 +186,7 @@ function SeatSelection() {
         <p className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">{lockError}</p>
       )}
 
-      {seats.length > 0 && (
+      {seats.length > 0 && !isSleeper && (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <div className="flex flex-wrap gap-4 justify-center mb-6 text-xs text-gray-600">
             <LegendItem colorClass="bg-white border-gray-300" label="Available" />
@@ -160,6 +243,22 @@ function SeatSelection() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {seats.length > 0 && isSleeper && (
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+          <div className="flex flex-wrap gap-4 justify-center mb-6 text-xs text-gray-600">
+            <LegendItem colorClass="bg-white border-gray-200" label="Available" />
+            <LegendItem colorClass="bg-[#D6262C]/10 border-[#D6262C]" label="Selected" />
+            <LegendItem colorClass="bg-yellow-50 border-yellow-300" label="Locked" />
+            <LegendItem colorClass="bg-gray-200 border-gray-200" label="Sold" />
+          </div>
+
+          <div className="border-2 border-gray-200 rounded-2xl px-4 py-6 bg-gray-50 flex gap-8">
+            <SleeperDeck title="Lower Deck" deckSeats={lowerDeck} showWheel />
+            <SleeperDeck title="Upper Deck" deckSeats={upperDeck} />
           </div>
         </div>
       )}
