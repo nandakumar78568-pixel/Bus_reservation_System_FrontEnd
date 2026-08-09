@@ -20,7 +20,6 @@ function BookingForm() {
   const [pointsError, setPointsError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [scanned, setScanned] = useState(false);
   const navigate = useNavigate();
 
   // ---- Fare (needed to show a subtotal and to validate coupons) ----
