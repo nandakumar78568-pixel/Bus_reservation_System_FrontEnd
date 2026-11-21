@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchBuses, getCities } from "../api/api";
 import BusBanner from "../components/BusBanner";
-
+import Logo from "../components/Logo";
 const POPULAR_ROUTES = [
   { source: "Chennai", destination: "Bangalore", emoji: "🏙️" },
   { source: "Bangalore", destination: "Hyderabad", emoji: "💻" },
